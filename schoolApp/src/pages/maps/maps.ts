@@ -11,7 +11,6 @@ import {
 } from '@ionic-native/google-maps';
 import {Geolocation} from '@ionic-native/geolocation';
 
-
 /**
  * Generated class for the MapsPage page.
  *
@@ -29,6 +28,7 @@ export class MapsPage {
 
   lat;
   long;
+  random;
 
   constructor(private googleMaps: GoogleMaps,
               private geolocation: Geolocation) {
@@ -37,13 +37,15 @@ export class MapsPage {
   ionViewDidLoad() {
     this.getCurrentPosition();
 
+    this.random = Math.random() * 0.01;
+    console.log((Math.random() * 0.01));
   }
 
   getCurrentPosition() {
     this.geolocation.getCurrentPosition().then((resp) => {
-      this.lat = resp.coords.latitude;
-
-      this.long = resp.coords.longitude;
+      // this.lat = resp.coords.latitude;
+      //
+      // this.long = resp.coords.longitude;
       this.loadMap();
       // resp.coords.latitude
       // resp.coords.longitude
@@ -53,6 +55,10 @@ export class MapsPage {
 
     let watch = this.geolocation.watchPosition();
     watch.subscribe((data) => {
+
+      this.lat = data.coords.latitude;
+
+      this.long = data.coords.longitude;
       // data can be a set of coordinates, or an error (if an error occurred).
       // data.coords.latitude
 
@@ -66,9 +72,9 @@ export class MapsPage {
       camera: {
         target: {
           lat: this.lat,
-          lng: this.long
+          lng: this.long,
         },
-        zoom: 15
+        zoom: 15,
       }
     };
 
@@ -80,8 +86,8 @@ export class MapsPage {
         console.log('Map is ready!');
         // Now you can use all methods safely.
         this.map.addMarker({
-          title: 'Ionic',
-          icon: 'blue',
+          title: 'Me',
+          icon: 'red',
           animation: 'DROP',
           position: {
             lat: this.lat,
@@ -100,19 +106,23 @@ export class MapsPage {
           markers: [
             {
               "position": {
-                "lat": this.lat + 0.0010,
-                "lng": this.long + 0.0010
+                "lat": this.lat + Math.random() * 0.01,
+                "lng": this.long + Math.random() * 0.01
               },
-              "name": "Starbucks - HI - Aiea  03641",
-              "address": "Aiea Shopping Center_99-115 Aiea Heights Drive #125_Aiea, Hawaii 96701",
-              "phone": "808-484-1488",
-              "icon": "img/starbucks.png"
-            }],
+              "Title": "Harrie",
+              "icon": "green"
+            },
+            {
+              "position": {
+                "lat": this.lat + Math.random() * 0.01,
+                "lng": this.long + Math.random() * 0.01
+              },
+              "Title": "Sjaak",
+              "icon": "Blue"
+            }
+          ],
           icons: [
             {min: 2, max: 100, icon: 'green', anchor: {x: 16, y: 16}},
-            {min: 100, max: 1000, icon: 'green', anchor: {x: 16, y: 16}},
-            {min: 1000, max: 2000, icon: 'green', anchor: {x: 24, y: 24}},
-            {min: 2000, icon: 'green', anchor: {x: 32, y: 32}}
           ]
         });
       });
