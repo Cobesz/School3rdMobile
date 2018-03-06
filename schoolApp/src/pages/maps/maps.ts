@@ -18,6 +18,7 @@ import {
 } from '@ionic-native/background-geolocation';
 import {Geofence} from '@ionic-native/geofence';
 import {LocationTracker} from "../../providers/locationTracker";
+import {LocalNotifications} from "@ionic-native/local-notifications";
 
 /**
  * Generated class for the MapsPage page.
@@ -44,7 +45,8 @@ export class MapsPage {
   constructor(private googleMaps: GoogleMaps,
               private geolocation: Geolocation,
               private backgroundGeolocation: BackgroundGeolocation,
-              private locationTracker: LocationTracker, private geofence: Geofence) {
+              private locationTracker: LocationTracker, private geofence: Geofence,
+              private localNotifications: LocalNotifications) {
     // initialize the plugin
     geofence.initialize().then(
       // resolved promise does not return a value
@@ -59,6 +61,12 @@ export class MapsPage {
 
     this.random = Math.random() * 0.01;
     console.log((Math.random() * 0.01));
+
+    // Schedule a single notification
+    this.localNotifications.schedule({
+      id: 1,
+      text: 'Single ILocalNotification',
+    });
   }
 
   getCurrentPosition() {
@@ -116,6 +124,12 @@ export class MapsPage {
       }
     };
 
+    let fenceLat = this.lat + Math.random() * 0.02;
+    let fenceLng = this.long + Math.random() * 0.02;
+
+    console.log(fenceLat);
+    console.log(fenceLng);
+
     this.map = this.googleMaps.create('map_canvas', mapOptions);
 
 
@@ -146,21 +160,13 @@ export class MapsPage {
           markers: [
             {
               "position": {
-                "lat": this.lat + Math.random() * 0.01,
-                "lng": this.long + Math.random() * 0.01
+                "lat": fenceLat,
+                "lng": fenceLng
 
 
               },
               "Title": "Harrie",
               "icon": "green"
-            },
-            {
-              "position": {
-                "lat": this.lat + Math.random() * 0.01,
-                "lng": this.long + Math.random() * 0.01
-              },
-              "Title": "Sjaak",
-              "icon": "Blue"
             }
           ],
           icons: [
@@ -168,15 +174,17 @@ export class MapsPage {
           ]
         });
       });
-    this.addGeofence();
+    this.addGeofence(fenceLat, fenceLng);
   }
 
-  private addGeofence() {
+  private addGeofence(lat, lng) {
+    console.log(lat);
+    console.log(lng);
     //options describing geofence
     this.fence = {
       id: '69ca1b88-6fbe-4e80-a4d4-ff4d3748acdb', //any unique ID
-      latitude: this.lat + Math.random() * 0.01, //center of geofence radius
-      longitude: this.long + Math.random() * 0.01,
+      latitude: lat, //center of geofence radius
+      longitude: lng,
       radius: 100, //radius to edge of geofence in meters
       transitionType: 3, //see 'Transition Types' below
       notification: { //notification settings

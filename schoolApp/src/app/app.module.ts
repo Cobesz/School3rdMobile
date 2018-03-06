@@ -14,6 +14,7 @@ import {GoogleMap, GoogleMaps} from "@ionic-native/google-maps";
 import { Geolocation } from '@ionic-native/geolocation';
 import {BackgroundGeolocation} from "@ionic-native/background-geolocation";
 import {Geofence} from '@ionic-native/geofence';
+import { LocalNotifications } from '@ionic-native/local-notifications';
 import {LocationTracker} from "../providers/locationTracker";
 
 @NgModule({
@@ -45,6 +46,7 @@ import {LocationTracker} from "../providers/locationTracker";
     BackgroundGeolocation,
     Geolocation,
     Geofence,
+    LocalNotifications,
     {provide: ErrorHandler, useClass: IonicErrorHandler}
   ]
 })
