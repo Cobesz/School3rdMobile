@@ -69,7 +69,6 @@ export class MapsPage {
   ionViewDidLoad() {
 
     this.getCurrentPosition();
-
     //
   }
 
