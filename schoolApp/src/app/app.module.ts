@@ -16,6 +16,9 @@ import {BackgroundGeolocation} from "@ionic-native/background-geolocation";
 import {Geofence} from '@ionic-native/geofence';
 import { LocalNotifications } from '@ionic-native/local-notifications';
 import {LocationTracker} from "../providers/locationTracker";
+import {Camera, CameraOptions} from "@ionic-native/camera";
+import {CameraManager} from "../providers/camera";
+import {Base64ToGallery} from "@ionic-native/base64-to-gallery";
 
 @NgModule({
   declarations: [
@@ -42,6 +45,9 @@ import {LocationTracker} from "../providers/locationTracker";
     SplashScreen,
     MapsPage,
     LocationTracker,
+    Camera,
+    Base64ToGallery,
+    CameraManager,
     GoogleMaps,
     BackgroundGeolocation,
     Geolocation,

@@ -19,6 +19,7 @@ import {
 import {Geofence} from '@ionic-native/geofence';
 import {LocationTracker} from "../../providers/locationTracker";
 import {LocalNotifications} from "@ionic-native/local-notifications";
+import {CameraManager} from "../../providers/camera";
 
 /**
  * Generated class for the MapsPage page.
@@ -47,29 +48,29 @@ export class MapsPage {
   fenceLat;
   fenceLng;
 
-  random;
-
   constructor(private googleMaps: GoogleMaps,
               private geolocation: Geolocation,
               private backgroundGeolocation: BackgroundGeolocation,
               private locationTracker: LocationTracker,
+              private cameraManager: CameraManager,
               private geofence: Geofence,
               private localNotifications: LocalNotifications,
-              public zone: NgZone) {
+              private zone: NgZone) {
     // initialize the plugin
     geofence.initialize().then(
       // resolved promise does not return a value
       () => console.log('Geofence Plugin Ready'),
       (err) => console.log(err)
-    )
+    );
+
+    this.startBackgroundTracking();
   }
 
   ionViewDidLoad() {
-    this.startBackgroundTracking();
+
     this.getCurrentPosition();
 
-    this.random = Math.random() * 0.01;
-    console.log((Math.random() * 0.01));
+    //
   }
 
   getCurrentPosition() {
@@ -198,8 +199,6 @@ export class MapsPage {
 
     this.backgroundGeolocation.configure(config).subscribe((location) => {
 
-      console.log('BackgroundGeolocation:  ' + location.latitude + ',' + location.longitude);
-
       // Run update inside of Angular's zone
       this.zone.run(() => {
         this.lat = location.latitude;
@@ -217,14 +216,16 @@ export class MapsPage {
     this.geofence.onTransitionReceived().subscribe(() => {
       this.localNotifications.schedule({
         id: 1,
-        text: 'Gevonden!',
+        text: 'Found treasure! Druk om een foto te maken.',
       });
+      this.localNotifications.on('click', () => {
+        this.cameraManager.takePicture();
+        this.geofence.removeAll();
+      })
     });
   }
 
   stopBackgroundTracking() {
-
-    console.log('stopTracking');
 
     this.backgroundGeolocation.finish();
     this.watch.unsubscribe();
