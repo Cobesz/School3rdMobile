@@ -40,6 +40,9 @@ export class MapsPage {
   userMarker;
   fence;
 
+  fenceLat;
+  fenceLng;
+
   random;
 
   constructor(private googleMaps: GoogleMaps,
@@ -124,11 +127,8 @@ export class MapsPage {
       }
     };
 
-    let fenceLat = this.lat + Math.random() * 0.02;
-    let fenceLng = this.long + Math.random() * 0.02;
-
-    console.log(fenceLat);
-    console.log(fenceLng);
+    this.fenceLat = this.lat + Math.random() * 0.02;
+    this.fenceLng = this.long + Math.random() * 0.02;
 
     this.map = this.googleMaps.create('map_canvas', mapOptions);
 
@@ -160,8 +160,8 @@ export class MapsPage {
           markers: [
             {
               "position": {
-                "lat": fenceLat,
-                "lng": fenceLng
+                "lat": this.fenceLat,
+                "lng": this.fenceLng
 
 
               },
@@ -174,23 +174,22 @@ export class MapsPage {
           ]
         });
       });
-    this.addGeofence(fenceLat, fenceLng);
+    this.addGeofence();
   }
 
-  private addGeofence(lat, lng) {
-    console.log(lat);
-    console.log(lng);
+  private addGeofence() {
+
     //options describing geofence
     this.fence = {
       id: '69ca1b88-6fbe-4e80-a4d4-ff4d3748acdb', //any unique ID
-      latitude: lat, //center of geofence radius
-      longitude: lng,
+      latitude: this.fenceLat, //center of geofence radius
+      longitude: this.fenceLng,
       radius: 100, //radius to edge of geofence in meters
       transitionType: 3, //see 'Transition Types' below
       notification: { //notification settings
         id: 1, //any unique ID
         title: 'You crossed a fence', //notification title
-        text: 'You just arrived to Gliwice city center.', //notification body
+        text: 'You just arrived at your destination.', //notification body
         openAppOnClick: true //open app when notification is tapped
       }
     };

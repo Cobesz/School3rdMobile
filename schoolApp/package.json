@@ -84,6 +84,8 @@
       "cordova-plugin-local-notification": {},
       "cordova-plugin-geofence": {}
     },
-    "platforms": []
+    "platforms": [
+      "android"
+    ]
   }
 }
