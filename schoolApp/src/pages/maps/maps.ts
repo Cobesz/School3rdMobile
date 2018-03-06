@@ -1,5 +1,6 @@
 import {Component} from '@angular/core';
 import {IonicPage, NavController, NavParams} from 'ionic-angular';
+import 'rxjs/add/operator/filter';
 import {
   GoogleMaps,
   GoogleMap,
@@ -10,6 +11,13 @@ import {
   Marker
 } from '@ionic-native/google-maps';
 import {Geolocation} from '@ionic-native/geolocation';
+import {
+  BackgroundGeolocation,
+  BackgroundGeolocationConfig,
+  BackgroundGeolocationResponse
+} from '@ionic-native/background-geolocation';
+import {Geofence} from '@ionic-native/geofence';
+import {LocationTracker} from "../../providers/locationTracker";
 
 /**
  * Generated class for the MapsPage page.
@@ -28,13 +36,25 @@ export class MapsPage {
 
   lat;
   long;
+  userMarker;
+  fence;
+
   random;
 
   constructor(private googleMaps: GoogleMaps,
-              private geolocation: Geolocation) {
+              private geolocation: Geolocation,
+              private backgroundGeolocation: BackgroundGeolocation,
+              private locationTracker: LocationTracker, private geofence: Geofence) {
+    // initialize the plugin
+    geofence.initialize().then(
+      // resolved promise does not return a value
+      () => console.log('Geofence Plugin Ready'),
+      (err) => console.log(err)
+    )
   }
 
   ionViewDidLoad() {
+    this.locationTracker.startBackgroundTracking();
     this.getCurrentPosition();
 
     this.random = Math.random() * 0.01;
@@ -43,32 +63,50 @@ export class MapsPage {
 
   getCurrentPosition() {
     this.geolocation.getCurrentPosition().then((resp) => {
-      // this.lat = resp.coords.latitude;
-      //
-      // this.long = resp.coords.longitude;
-      this.loadMap();
+      this.lat = resp.coords.latitude;
+
+      this.long = resp.coords.longitude;
+      this.createMap();
       // resp.coords.latitude
       // resp.coords.longitude
     }).catch((error) => {
       console.log('Error getting location', error);
     });
-
-    let watch = this.geolocation.watchPosition();
-    watch.subscribe((data) => {
-
-      this.lat = data.coords.latitude;
-
-      this.long = data.coords.longitude;
-      // data can be a set of coordinates, or an error (if an error occurred).
-      // data.coords.latitude
-
-      // data.coords.longitude
-    });
   }
 
-  loadMap() {
+  watchPosition() {
+    const subscription = this.geolocation.watchPosition()
+      .filter((p) => p.coords !== undefined) //Filter Out Errors
+      .subscribe(position => {
+        this.long = position.coords.longitude;
+        this.lat = position.coords.latitude;
+
+        this.map.animateCamera({
+          target: {
+            lat: this.lat,
+            lng: this.long,
+          },
+          zoom: 15,
+        });
+
+        // this.map.setCameraTarget(this.lat);
+        // this.map.moveCamera(
+        //   this.lat
+        // );
+        console.log(position.coords.longitude + ' ' + position.coords.latitude);
+      });
+
+// To stop notifications
+//     subscription.unsubscribe();
+  }
+
+  createMap() {
 
     let mapOptions: GoogleMapOptions = {
+      'controls': {
+        // 'compass': true,
+        'myLocationButton': true
+      },
       camera: {
         target: {
           lat: this.lat,
@@ -80,26 +118,28 @@ export class MapsPage {
 
     this.map = this.googleMaps.create('map_canvas', mapOptions);
 
+
     // Wait the MAP_READY before using any methods.
     this.map.one(GoogleMapsEvent.MAP_READY)
       .then(() => {
         console.log('Map is ready!');
         // Now you can use all methods safely.
-        this.map.addMarker({
-          title: 'Me',
-          icon: 'red',
-          animation: 'DROP',
-          position: {
-            lat: this.lat,
-            lng: this.long
-          }
-        })
-          .then(marker => {
-            marker.on(GoogleMapsEvent.MARKER_CLICK)
-              .subscribe(() => {
-                alert('clicked');
-              });
-          });
+
+
+        this.map.setMyLocationEnabled(true);
+
+        // this.userMarker = this.map.addMarker({
+        //   title: 'Me',
+        //   icon: 'red',
+        //   animation: 'DROP',
+        //   position: {
+        //     lat: this.lat,
+        //     lng: this.long
+        //   }
+        // });
+
+        this.watchPosition();
+
         this.map.addMarkerCluster({
           //maxZoomLevel: 5,
           boundsDraw: true,
@@ -108,6 +148,8 @@ export class MapsPage {
               "position": {
                 "lat": this.lat + Math.random() * 0.01,
                 "lng": this.long + Math.random() * 0.01
+
+
               },
               "Title": "Harrie",
               "icon": "green"
@@ -126,5 +168,28 @@ export class MapsPage {
           ]
         });
       });
+    this.addGeofence();
+  }
+
+  private addGeofence() {
+    //options describing geofence
+    this.fence = {
+      id: '69ca1b88-6fbe-4e80-a4d4-ff4d3748acdb', //any unique ID
+      latitude: this.lat + Math.random() * 0.01, //center of geofence radius
+      longitude: this.long + Math.random() * 0.01,
+      radius: 100, //radius to edge of geofence in meters
+      transitionType: 3, //see 'Transition Types' below
+      notification: { //notification settings
+        id: 1, //any unique ID
+        title: 'You crossed a fence', //notification title
+        text: 'You just arrived to Gliwice city center.', //notification body
+        openAppOnClick: true //open app when notification is tapped
+      }
+    };
+
+    this.geofence.addOrUpdate(this.fence).then(
+      () => console.log('Geofence added'),
+      (err) => console.log('Geofence failed to add')
+    );
   }
 }

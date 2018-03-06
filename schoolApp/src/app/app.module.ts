@@ -12,6 +12,9 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 import {MapsPage} from "../pages/maps/maps";
 import {GoogleMap, GoogleMaps} from "@ionic-native/google-maps";
 import { Geolocation } from '@ionic-native/geolocation';
+import {BackgroundGeolocation} from "@ionic-native/background-geolocation";
+import {Geofence} from '@ionic-native/geofence';
+import {LocationTracker} from "../providers/locationTracker";
 
 @NgModule({
   declarations: [
@@ -37,8 +40,11 @@ import { Geolocation } from '@ionic-native/geolocation';
     StatusBar,
     SplashScreen,
     MapsPage,
+    LocationTracker,
     GoogleMaps,
+    BackgroundGeolocation,
     Geolocation,
+    Geofence,
     {provide: ErrorHandler, useClass: IonicErrorHandler}
   ]
 })
