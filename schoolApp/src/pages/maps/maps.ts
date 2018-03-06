@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import {Component, NgZone} from '@angular/core';
 import {IonicPage, NavController, NavParams} from 'ionic-angular';
 import 'rxjs/add/operator/filter';
 import {
@@ -35,6 +35,10 @@ import {LocalNotifications} from "@ionic-native/local-notifications";
 export class MapsPage {
   map: GoogleMap;
 
+  public watch: any;
+  // public lat: number;
+  // public lng: number;
+
   lat;
   long;
   userMarker;
@@ -48,8 +52,10 @@ export class MapsPage {
   constructor(private googleMaps: GoogleMaps,
               private geolocation: Geolocation,
               private backgroundGeolocation: BackgroundGeolocation,
-              private locationTracker: LocationTracker, private geofence: Geofence,
-              private localNotifications: LocalNotifications) {
+              private locationTracker: LocationTracker,
+              private geofence: Geofence,
+              private localNotifications: LocalNotifications,
+              public zone: NgZone) {
     // initialize the plugin
     geofence.initialize().then(
       // resolved promise does not return a value
@@ -59,17 +65,11 @@ export class MapsPage {
   }
 
   ionViewDidLoad() {
-    this.locationTracker.startBackgroundTracking();
+    this.startBackgroundTracking();
     this.getCurrentPosition();
 
     this.random = Math.random() * 0.01;
     console.log((Math.random() * 0.01));
-
-    // Schedule a single notification
-    this.localNotifications.schedule({
-      id: 1,
-      text: 'Single ILocalNotification',
-    });
   }
 
   getCurrentPosition() {
@@ -85,6 +85,7 @@ export class MapsPage {
     });
   }
 
+  //onscreen geolocation
   watchPosition() {
     const subscription = this.geolocation.watchPosition()
       .filter((p) => p.coords !== undefined) //Filter Out Errors
@@ -99,23 +100,15 @@ export class MapsPage {
           },
           zoom: 15,
         });
-
-        // this.map.setCameraTarget(this.lat);
-        // this.map.moveCamera(
-        //   this.lat
-        // );
         console.log(position.coords.longitude + ' ' + position.coords.latitude);
-      });
 
-// To stop notifications
-//     subscription.unsubscribe();
+      });
   }
 
   createMap() {
 
     let mapOptions: GoogleMapOptions = {
       'controls': {
-        // 'compass': true,
         'myLocationButton': true
       },
       camera: {
@@ -132,8 +125,7 @@ export class MapsPage {
 
     this.map = this.googleMaps.create('map_canvas', mapOptions);
 
-
-    // Wait the MAP_READY before using any methods.
+    // Wait until map is ready.
     this.map.one(GoogleMapsEvent.MAP_READY)
       .then(() => {
         console.log('Map is ready!');
@@ -141,17 +133,6 @@ export class MapsPage {
 
 
         this.map.setMyLocationEnabled(true);
-
-        // this.userMarker = this.map.addMarker({
-        //   title: 'Me',
-        //   icon: 'red',
-        //   animation: 'DROP',
-        //   position: {
-        //     lat: this.lat,
-        //     lng: this.long
-        //   }
-        // });
-
         this.watchPosition();
 
         this.map.addMarkerCluster({
@@ -173,8 +154,9 @@ export class MapsPage {
             {min: 2, max: 100, icon: 'green', anchor: {x: 16, y: 16}},
           ]
         });
+        // add geofence to the marker
+        this.addGeofence();
       });
-    this.addGeofence();
   }
 
   private addGeofence() {
@@ -199,4 +181,55 @@ export class MapsPage {
       (err) => console.log('Geofence failed to add')
     );
   }
+
+
+  //background tracking and notifications are taken care of here.
+  startBackgroundTracking() {
+
+    // Background Tracking
+
+    let config = {
+      desiredAccuracy: 0,
+      stationaryRadius: 20,
+      distanceFilter: 10,
+      debug: true,
+      interval: 2000
+    };
+
+    this.backgroundGeolocation.configure(config).subscribe((location) => {
+
+      console.log('BackgroundGeolocation:  ' + location.latitude + ',' + location.longitude);
+
+      // Run update inside of Angular's zone
+      this.zone.run(() => {
+        this.lat = location.latitude;
+        this.long = location.longitude;
+      });
+    }, (err) => {
+
+      console.log(err);
+
+    });
+
+    // Turn ON the background-geolocation system.
+    this.backgroundGeolocation.start();
+
+    this.geofence.onTransitionReceived().subscribe(() => {
+      this.localNotifications.schedule({
+        id: 1,
+        text: 'Gevonden!',
+      });
+    });
+  }
+
+  stopBackgroundTracking() {
+
+    console.log('stopTracking');
+
+    this.backgroundGeolocation.finish();
+    this.watch.unsubscribe();
+
+  }
+
+
 }
